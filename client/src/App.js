@@ -1,19 +1,21 @@
+import axios from "axios";
 
 function App() {
+
+  const testConnection = async () => {
+    const response = await axios.get('http://localhost:3100/');
+    console.log(response.data);
+  }
+
   return (
     <div>
       <header>
         <p>
           Edit <code>src/App.js</code> and save to reload.
         </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+        <button onClick={testConnection}>
+          test server connection
+        </button>
       </header>
     </div>
   );
