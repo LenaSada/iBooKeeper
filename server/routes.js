@@ -3,6 +3,7 @@ const router = express.Router();
 const cors = require('cors');
 const User = require('./user')
 const jwt = require('jsonwebtoken');
+const Appointments = require('./appointments')
 router.use(
     cors({
         credentials: true,
@@ -53,5 +54,88 @@ router.get('/getuser', async (req, res) => {
         console.log('Error getting user: ', error);
     }
 })
+
+const getTimes = async (date_formatted, get_available = true) => {
+    const date = date_formatted.substring(0, 10);
+    try {
+        const appointment = await Appointments.create({ date: date });
+    } catch (error) {
+        console.log('Date already exists: ', error);
+    }
+    const day = await Appointments.findOne({ date: date })    // Represents the appointments of the given date
+    var available_hours = [];
+    for (const key in day.time_intervals) {  // Save available times for appointments in the array, in the format: 15:00
+        if (day.time_intervals[key] && get_available) {
+            continue;
+        } else if (!day.time_intervals[key] && !get_available) {
+            continue;
+        }
+        var time = key;
+        var val = Math.floor(time).toString();
+        if (time < 10) {
+            val = "0" + val;
+        }
+        if (time != Math.floor(time)) {
+            val += ":30";
+        }
+        else {
+            val += ":00";
+        }
+        if (get_available) {
+            available_hours.push(val);
+        } else {
+            const user = await User.findById(day.time_intervals[key]);
+            const user_name = user.name;
+            const id = day.time_intervals[key];
+            available_hours.push({ val, user_name, id });
+        }
+    }
+    if (!get_available) {
+        available_hours.sort((a, b) => { return a.val.localeCompare(b.val); })
+    }
+    return available_hours.sort();
+}
+
+router.post('/getavailabletimes', async (req, res) => {
+    try {
+        const { date_formatted } = req.body;
+        available_hours = await getTimes(date_formatted);
+        res.json(available_hours);
+    } catch (error) {
+        console.log("Error getting available times: ", error);
+    }
+});
+
+router.post('/getreservedtimes', async (req, res) => {
+    try {
+        const { date_formatted } = req.body;
+        available_hours = await getTimes(date_formatted, false);
+        res.json(available_hours);
+    } catch (error) {
+        console.log("Error getting reserved times: ", error);
+    }
+});
+
+router.get('/bookedDays', async (req, res) => {
+    bookedDays = {}
+    await Appointments.find({})
+        .then(appointments => {
+            for (const appointment of appointments) {
+                let test = true;
+                for (const key in appointment.time_intervals) {
+                    if (appointment.time_intervals[key] === null) {
+                        test = false;
+                        break;
+                    }
+                }
+                if (test === true) {
+                    bookedDays[appointment.date] = true;
+                }
+            }
+        })
+        .catch(error => console.error(error));
+    console.log(bookedDays);
+    res.json(bookedDays);
+});
 
 module.exports = router;
