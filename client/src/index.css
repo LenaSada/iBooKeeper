@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -10,4 +14,31 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+.sign-in__bar {
+  border: 2px solid #e6e6e6;
+  box-shadow: 1px 1px 3px #0f141b,
+    -1px -1px 3px #0f141b;
+  margin: auto;
+  margin-top: 20px;
+  padding: 20px;
+  background-color: whitesmoke;
+  border-radius: 8px;
+  @apply flex justify-start flex-col w-full relative max-sm:gap-4 max-w-md;
+}
+
+.bar__item {
+  @apply flex-1 w-full flex justify-start items-center relative;
+}
+
+.bar__input {
+  box-shadow: 1px 1px 3px #0f141b,
+    -1px -1px 3px #0f141b;
+  @apply w-full h-[48px] pl-12 p-4 bg-transparent rounded-r-full rounded-full outline-none cursor-pointer text-sm;
+}
+
+.sign-in__btn {
+  box-shadow: 1px 1px 3px #0f141b,
+  -1px -1px 3px #0f141b;
 }

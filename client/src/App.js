@@ -1,23 +1,33 @@
-import axios from "axios";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+} from "react-router-dom";
+import Home from './components/Home'
+import { UserContextProvider } from "./userContext";
+import UserRoleChecker from "./components/UserRoleChecker";
 
 function App() {
 
-  const testConnection = async () => {
-    const response = await axios.get('http://localhost:3100/');
-    console.log(response.data);
-  }
-
   return (
-    <div>
-      <header>
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <button onClick={testConnection}>
-          test server connection
-        </button>
-      </header>
-    </div>
+      <>
+          <Router>
+              <UserContextProvider>
+                  <Routes>
+                      <Route
+                          exact
+                          path="/"
+                          element={<Home />}
+                      />
+                      <Route
+                          exact
+                          path="/in"
+                          element={<UserRoleChecker />}
+                      />
+                  </Routes>
+              </UserContextProvider>
+          </Router>
+      </>
   );
 }
 
