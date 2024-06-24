@@ -50,3 +50,21 @@ export const getBookedDays = async () => {
         console.error('Error fetching booked days:', error);
     }
 }
+
+export const getReservedTimes = async (date_formatted) => {
+    try {
+        const response = await axios.post('http://localhost:3100/getreservedtimes', {
+            date_formatted: date_formatted
+        }, {
+            withCredentials: true
+        });
+        if (response.data.error) {
+            console.log(response.data.error);
+        }
+        console.log(response.data);
+
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching times:', error);
+    }
+}

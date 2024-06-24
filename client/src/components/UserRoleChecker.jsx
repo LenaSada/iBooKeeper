@@ -2,6 +2,7 @@ import React, { useContext } from 'react';
 import HomepageUser from './HomepageUser';
 import { UserContext } from '../userContext';
 import { getBookedDays } from '../utils';
+import HomepageAccountant from './HomepageAccountant';
 
 const UserRoleChecker = () => {
     const { user } = useContext(UserContext);
@@ -39,7 +40,7 @@ const UserRoleChecker = () => {
             }
             {
                 !!user && user.role === 'accountant' && 
-                <h1>Accountant Homepage</h1>
+                <HomepageAccountant user={user} formatDate={formatDate} getBookedDaysHelper={getBookedDaysHelper} />
             }
         </>
     )
