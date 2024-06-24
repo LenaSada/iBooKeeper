@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import {
-    getAvailableTimes
+    getAvailableTimes, setAppointment
 } from '../utils';
 
 const HomepageUser = ({user, formatDate, getBookedDaysHelper}) => {
@@ -31,6 +31,15 @@ const HomepageUser = ({user, formatDate, getBookedDaysHelper}) => {
         setNote(date.getDate() + "/" + month);
     }
 
+    const scheduleAppointmentAtTime = async (time) => {
+        try {
+            await setAppointment(current_date, time, user);
+            setAvailable_times(await getAvailableTimes(current_date));
+        } catch (error) {
+            console.error('Error scheduling an appointment:', error);
+        }
+    }
+
     return (
         <div>
             {!!user &&
@@ -50,7 +59,7 @@ const HomepageUser = ({user, formatDate, getBookedDaysHelper}) => {
                                     type='button'
                                     className='rounded-full sign-in__btn min-h-[30px] w-full'
                                     key={index}
-                                    onClick={() => {  }}>
+                                    onClick={() => { scheduleAppointmentAtTime(time) }}>
                                     {time}
                                 </button>
                             </div>

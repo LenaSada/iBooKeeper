@@ -138,4 +138,28 @@ router.get('/bookedDays', async (req, res) => {
     res.json(bookedDays);
 });
 
+router.post('/setappointment', async (req, res) => {
+    try {
+        const { date_formatted, time, user } = req.body;
+        // date used to fetch the specific appointment
+        const date = date_formatted.substring(0, 10);
+        // Fetching user to attach to appointment
+        const user_id = (await User.findOne({ email: user.email })).id;
+        // Index of the time_intervals in the appointments date
+        const index = Number(time.substring(0, 2)) + Number(time[3]) / 6;
+        const appointment = await Appointments.findOne({ date: date });
+
+        console.log(index);
+        console.log(appointment.time_intervals[index]);
+
+        const updatedTimeIntervals = { ...appointment.time_intervals, [index]: user_id };
+        appointment.time_intervals = updatedTimeIntervals;
+        await appointment.save();
+
+        res.json('Appointment Set!')
+    } catch (error) {
+        console.log('Error signing in: ', error);
+    }
+});
+
 module.exports = router;

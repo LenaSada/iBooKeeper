@@ -68,3 +68,23 @@ export const getReservedTimes = async (date_formatted) => {
         console.error('Error fetching times:', error);
     }
 }
+
+export const setAppointment = async (date_formatted, time, user) => {
+    try {
+        const response = await axios.post('http://localhost:3100/setappointment', {
+            date_formatted: date_formatted,
+            time,
+            user
+        }, {
+            withCredentials: true
+        });
+        if (response.data.error) {
+            console.log(response.data.error);
+        }
+        console.log(response.data);
+
+        return response.data;
+    } catch (error) {
+        console.error('Error Setting Appointment:', error);
+    }
+}
