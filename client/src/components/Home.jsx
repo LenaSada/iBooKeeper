@@ -69,6 +69,8 @@ const Home = () => {
                         <div style={{ color: 'red' }}>{error}</div>
                         <div className='m-5 flex justify-center'>
                         </div>
+                        <h1 className='flex justify-center'>Don't have an account? 
+                            <a className='text-blue-800' href="/signup"> Sign Up.</a></h1>
                     </div>
                     <div className='sign-in__bar'>
                         <div className='flex flex-row justify-center'>

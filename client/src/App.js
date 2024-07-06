@@ -6,6 +6,7 @@ import {
 import Home from './components/Home'
 import { UserContextProvider } from "./userContext";
 import UserRoleChecker from "./components/UserRoleChecker";
+import SignUp from "./components/SignUp";
 
 function App() {
 
@@ -23,6 +24,11 @@ function App() {
                           exact
                           path="/in"
                           element={<UserRoleChecker />}
+                      />
+                      <Route
+                          exact
+                          path="/signup"
+                          element={<SignUp />}
                       />
                   </Routes>
               </UserContextProvider>
