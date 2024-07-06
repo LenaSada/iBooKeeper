@@ -5,6 +5,7 @@ const User = require('./user')
 const jwt = require('jsonwebtoken');
 const Appointments = require('./appointments')
 const nodemailer = require('nodemailer');
+const Complaint = require('./complaint');
 
 router.use(
     cors({
@@ -339,6 +340,88 @@ cron.schedule("0 0 * * * *", async function(){
 })
 
 /*************************************************************************************/
+
+/************************************ Multer Section ************************************/
+const multer = require('multer');
+const path = require('path');
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads')
+    },
+    filename: (req, file, cb) => {
+        cb(null, file.fieldname + "_" + Date.now() + path.extname(file.originalname))
+    }
+});
+
+const upload = multer({ storage: storage });
+
+router.post('/sendcomplaint', upload.single('file'), async (req, res) => {
+    try {
+        const { user_email, subject, complaint } = req.body;
+        // Fetching user to attach to complaint
+        const user = (await User.findOne({ email: String(user_email) }));
+        Complaint.create({
+            user: user, subject: subject,
+            complaint: String(complaint),
+            file_path: 'uploads/' + req.file.filename
+        })
+        res.json('Saved');
+    } catch (error) {
+        console.log('Error saving complaint: ', error);
+    }
+})
+
+/******************************** send mail to client ********************************/
+
+router.post('/sendcomplaintresponse', upload.single('file'), async (req, res) => {
+    try {
+        const { user_id, complaintResponse, complaint_id } = req.body;
+        console.log(complaint_id);
+        const user = await User.findById(user_id);
+        const complaint = await Complaint.findById(complaint_id);
+        const subject = complaint.subject;
+        if (req.file && req.file.filename) {
+            const file_name = 'uploads/' + req.file.filename;
+            send_mail(user.email, subject, complaintResponse, file_name, './' + file_name);
+        } else {
+            send_mail(user.email, subject, complaintResponse);
+        }
+        complaint.addressed = true;
+        await complaint.save();
+        res.json("Response Sent!");
+    } catch (error) {
+        console.log('Error sending complaint response: ', error);
+    }
+})
+
+/*************************** send complaints to accountant ***************************/
+
+router.get('/getcomplaints', async (req, res) => {
+    try {
+        const complaints = await Complaint.find({ addressed: false });
+        complaints.sort((a, b) => {
+            return a.date - b.date;
+        });
+        console.log(complaints);
+        res.json(complaints);
+    } catch (error) {
+        console.log('Error getting complaint: ', error);
+    }
+})
+
+/*************************************************************************************/
+
+/******************************** send file to client ********************************/
+
+router.get('/getfile', async (req, res) => {
+    try {
+        const { file_path } = req.query;
+        res.download(file_path);
+    } catch (error) {
+        console.log('Error sending file: ', error);
+    }
+})
 
 /*************************************************************************************/
 

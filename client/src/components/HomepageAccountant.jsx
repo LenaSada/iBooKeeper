@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { getReservedTimes } from '../utils';
+import { getComplaints, getReservedTimes } from '../utils';
+import Complaints from './Complaints';
 
 const HomepageAccountant = ({ user, formatDate, getBookedDaysHelper }) => {
     const [value, setValue] = useState(new Date());
@@ -9,8 +10,11 @@ const HomepageAccountant = ({ user, formatDate, getBookedDaysHelper }) => {
     const [note, setNote] = useState("");
     const [reserved_times, setReserved_times] = useState([]);
     const [current_date, setCurrent_date] = useState("");
+    const [complaints, setComplaints] = useState([]);
+    const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
+        getComplaintsHelper();
     }, []);
 
     const dateChosen = async (date) => {
@@ -27,6 +31,16 @@ const HomepageAccountant = ({ user, formatDate, getBookedDaysHelper }) => {
         setNote(date.getDate() + "/" + month);
     }
 
+    const getComplaintsHelper = async () => {
+        try {
+            const temp = await getComplaints();
+            console.log(temp);
+            setComplaints(temp);
+        } catch (error) {
+            console.error('Error getting complaints: ', error)
+        }
+    }
+
     const logOut = () => {
         document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
         window.location.href = "/";
@@ -37,6 +51,10 @@ const HomepageAccountant = ({ user, formatDate, getBookedDaysHelper }) => {
             <nav className="bg-blue-600 p-4 flex justify-between items-center mb-10">
                 <div className="text-white font-semibold">Welcome {user.name}</div>
                 <div>
+                    <button className="bg-white text-blue-600 py-2 px-4 rounded-md mr-2 
+          hover:bg-blue-500 hover:text-white" onClick={() => { setIsOpen(true) }}>
+                        Show Complaints
+                    </button>
                     <button className="bg-white text-blue-600 py-2 px-4 rounded-md 
           hover:bg-blue-500 hover:text-white" onClick={logOut}>
                         Log Out
@@ -58,6 +76,7 @@ const HomepageAccountant = ({ user, formatDate, getBookedDaysHelper }) => {
                     </div>
                 ))}
             </div>
+            <Complaints isOpen={isOpen} closeWin={() => setIsOpen(false)} complaints={complaints} />
         </>
     )
 }

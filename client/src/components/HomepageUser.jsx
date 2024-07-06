@@ -7,6 +7,7 @@ import {
     setAppointment
 } from '../utils';
 import Appointments from './Appointments';
+import SendComplaint from './SendComplaint';
 
 const HomepageUser = ({ user, formatDate, getBookedDaysHelper }) => {
     const [selectedTime, setSelectedTime] = useState('');
@@ -137,6 +138,7 @@ const HomepageUser = ({ user, formatDate, getBookedDaysHelper }) => {
 
             <Appointments isOpen={isOpen} closeWin={() => { setIsOpen(false) }}
                 appointments={appointments} appointments_dates={appointments_dates} />
+            <SendComplaint isOpen={isOpen2} closeWin={() => { setIsOpen2(false) }} user={user} />
         </div>
     )
 }
