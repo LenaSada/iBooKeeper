@@ -9,7 +9,14 @@ const userSchema = new mongoose.Schema({
         enum: ['customer', 'accountant'],
         default: 'customer'
     },
-    appointments: [{type:Date}]
+    appointments: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Appointments'
+    }],
+    appointments_dates: [{
+        type: String,
+        unique: true
+    }]
 })
 const User = mongoose.model('User', userSchema);
 module.exports = User;
