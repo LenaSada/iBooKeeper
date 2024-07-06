@@ -42,3 +42,9 @@ code {
   box-shadow: 1px 1px 3px #0f141b,
   -1px -1px 3px #0f141b;
 }
+
+.complaint__btn {
+  border: 2px solid #e6e6e6;
+  box-shadow: 1px 1px 3px #0f141b,
+  -1px -1px 3px #0f141b;
+}

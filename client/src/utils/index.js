@@ -36,21 +36,6 @@ export const getAvailableTimes = async (date_formatted) => {
     }
 }
 
-export const getBookedDays = async () => {
-    try {
-        const response = await axios.get('http://localhost:3100/bookedDays', {
-            withCredentials: true
-        });
-        if (response.data.error) {
-            console.log(response.data.error);
-        }
-
-        return response.data;
-    } catch (error) {
-        console.error('Error fetching booked days:', error);
-    }
-}
-
 export const getReservedTimes = async (date_formatted) => {
     try {
         const response = await axios.post('http://localhost:3100/getreservedtimes', {
@@ -66,6 +51,21 @@ export const getReservedTimes = async (date_formatted) => {
         return response.data;
     } catch (error) {
         console.error('Error fetching times:', error);
+    }
+}
+
+export const getBookedDays = async () => {
+    try {
+        const response = await axios.get('http://localhost:3100/bookedDays', {
+            withCredentials: true
+        });
+        if (response.data.error) {
+            console.log(response.data.error);
+        }
+
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching booked days:', error);
     }
 }
 
@@ -89,22 +89,66 @@ export const setAppointment = async (date_formatted, time, user) => {
     }
 }
 
-export const cacnelAppointment = async (appointment_id, appointment_date) => {
+export const sendComplaint = async (user, subject, complaint, formData) => {
     try {
-        const response = await axios.post('http://localhost:3100/cancelappointment',
-            {
-                appointment_id: appointment_id,
-                appointment_date: appointment_date
-            }, {
+        const user_email = user.email;
+        formData.append('user_email', user_email);
+        formData.append('subject', subject);
+        formData.append('complaint', complaint);
+        const response = await axios.post('http://localhost:3100/sendcomplaint', formData, {
             withCredentials: true
         });
         if (response.data.error) {
             console.log(response.data.error);
         }
+        console.log(response.data);
 
         return response.data;
     } catch (error) {
-        console.error('Error Canceling Appointment:', error);
+        console.error('Error Sending Complaint:', error);
+    }
+}
+
+export const getComplaints = async () => {
+    try {
+        const response = await axios.get('http://localhost:3100/getcomplaints', {
+            withCredentials: true
+        });
+        if (response.data.error) {
+            console.log(response.data.error);
+        }
+        console.log(response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Error Getting Complaints:', error);
+    }
+}
+
+export const downloadFile = async (file_path) => {
+    try {
+        const response = await axios.get('http://localhost:3100/getfile', {
+            params: {
+                file_path: file_path
+            },
+            responseType: 'blob', // Set the responseType to 'blob'
+            withCredentials: true
+        });
+
+        // Create a blob from the response data
+        const blob = new Blob([response.data], { type: response.headers['content-type'] });
+
+        // Create a temporary link element to initiate the download
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute("download", file_path.split('/')[1]);
+        document.body.appendChild(link);
+        link.click();
+
+        // Clean up
+        URL.revokeObjectURL(link.href);
+        document.body.removeChild(link);
+    } catch (error) {
+        console.error('Error downloading file:', error);
     }
 }
 
@@ -119,7 +163,7 @@ export const getUserAppointments = async () => {
         console.log(response.data);
         return response.data;
     } catch (error) {
-        console.error('Error Getting Appointments:', error);
+        console.error('Error Getting Complaints:', error);
     }
 }
 
@@ -139,5 +183,42 @@ export const signUp = async (email, name, password) => {
         return response.data;
     } catch (error) {
         console.error('Error Signing Up:', error);
+    }
+}
+
+export const sendComplaintResponse = async (user_id, complaintResponse, complaint_id, formData) => {
+    try {
+        formData.append('user_id', user_id);
+        formData.append('complaintResponse', complaintResponse);
+        formData.append('complaint_id', complaint_id);
+        const response = await axios.post('http://localhost:3100/sendcomplaintresponse', formData, {
+            withCredentials: true
+        });
+        if (response.data.error) {
+            console.log(response.data.error);
+        }
+
+        return response.data;
+    } catch (error) {
+        console.error('Error Sending complaint response:', error);
+    }
+}
+
+export const cacnelAppointment = async (appointment_id, appointment_date) => {
+    try {
+        const response = await axios.post('http://localhost:3100/cancelappointment',
+            {
+                appointment_id: appointment_id,
+                appointment_date: appointment_date
+            }, {
+            withCredentials: true
+        });
+        if (response.data.error) {
+            console.log(response.data.error);
+        }
+
+        return response.data;
+    } catch (error) {
+        console.error('Error Canceling Appointment:', error);
     }
 }
