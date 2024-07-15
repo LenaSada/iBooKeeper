@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const Appointments = require('./appointments')
 const nodemailer = require('nodemailer');
 const Complaint = require('./complaint');
+const ComplaintResponse = require('./complaintresponse')
 
 router.use(
     cors({
@@ -179,7 +180,7 @@ router.post('/setappointment', async (req, res) => {
             const date2Obj = new Date(user2.appointments_dates[i]);
             const timeDifference = date2Obj - date1Obj;
             const daysDifference = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
-            
+
             if (daysDifference > -7 && daysDifference < 7) {
                 return res.json({ error: 'Appointments must be at least week apart' });
             }
@@ -308,12 +309,12 @@ const send_mail = async (mail, subject, txt, file_name, file_path) => {
 const cron = require('node-cron')
 
 // This runs every hour
-cron.schedule("0 0 * * * *", async function(){
+cron.schedule("0 0 * * * *", async function () {
     const now = new Date();
     const twentyFourHoursLater = (new Date(now.getTime() + 27 * 60 * 60 * 1000)).toISOString();
     const date = twentyFourHoursLater.substring(0, 10);
     const hour = twentyFourHoursLater.substring(11, 13);
-    console.log(date + "  "+ hour);
+    console.log(date + "  " + hour);
 
     try {
         const txt = "This is a reminder that you have an appointment tommorrow at ";
@@ -361,11 +362,18 @@ router.post('/sendcomplaint', upload.single('file'), async (req, res) => {
         const { user_email, subject, complaint } = req.body;
         // Fetching user to attach to complaint
         const user = (await User.findOne({ email: String(user_email) }));
-        Complaint.create({
-            user: user, subject: subject,
-            complaint: String(complaint),
-            file_path: 'uploads/' + req.file.filename
-        })
+        if (req.file && req.file.filename) {
+            Complaint.create({
+                user: user, subject: subject,
+                complaint: String(complaint),
+                file_path: 'uploads/' + req.file.filename
+            });
+        } else {
+            Complaint.create({
+                user: user, subject: subject,
+                complaint: String(complaint)
+            });
+        }
         res.json('Saved');
     } catch (error) {
         console.log('Error saving complaint: ', error);
@@ -384,8 +392,16 @@ router.post('/sendcomplaintresponse', upload.single('file'), async (req, res) =>
         if (req.file && req.file.filename) {
             const file_name = 'uploads/' + req.file.filename;
             send_mail(user.email, subject, complaintResponse, file_name, './' + file_name);
+            complaint_response = await ComplaintResponse.create({
+                complaint: complaint, user: user,
+                response: complaintResponse, file_path: file_name
+            })
         } else {
             send_mail(user.email, subject, complaintResponse);
+            complaint_response = await ComplaintResponse.create({
+                complaint: complaint, user: user,
+                response: complaintResponse
+            })
         }
         complaint.addressed = true;
         await complaint.save();
@@ -403,10 +419,70 @@ router.get('/getcomplaints', async (req, res) => {
         complaints.sort((a, b) => {
             return a.date - b.date;
         });
-        console.log(complaints);
-        res.json(complaints);
+        let result = [];
+        for (let complaint of complaints) {
+            const user_name = (await User.findById(complaint.user)).name;
+            result.push({
+                id: complaint._id, complaint: complaint.complaint, date: complaint.date,
+                file_path: complaint.file_path, subject: complaint.subject, user: complaint.user,
+                user_name: user_name
+            })
+        }
+        res.json(result);
     } catch (error) {
         console.log('Error getting complaint: ', error);
+    }
+})
+
+/*************************************************************************************/
+
+/*************************** send complaints responses to user ***************************/
+
+router.get('/getusercomplaintsresponses', async (req, res) => {
+    try {
+        const { user } = req.query;
+        const user_id = (await User.findOne({ email: user.email }))._id;
+        user_responses = await ComplaintResponse.find({ user: user_id });
+
+        let result = [];
+        for (let response of user_responses) {
+            const complaint = await Complaint.findById(response.complaint);
+            result.push({
+                id: response._id, complaint_subject: complaint.subject, user_name: user.name,
+                complaint: complaint.complaint, complaint_file_path: complaint.file_path,
+                response: response.response, file_path: response.file_path
+            })
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.log('Error getting user complaints responses: ', error);
+    }
+})
+
+/*************************************************************************************/
+
+/*************************** send complaints responses to accountant ***************************/
+
+router.get('/getcomplaintsresponses', async (req, res) => {
+    try {
+        responses = await ComplaintResponse.find({});
+
+        let result = [];
+        for (let response of responses) {
+            const user = await User.findById(response.user);
+            const complaint = await Complaint.findById(response.complaint);
+
+            result.push({
+                id: response._id, complaint_subject: complaint.subject, user_name: user.name,
+                complaint: complaint.complaint, complaint_file_path: complaint.file_path,
+                response: response.response, file_path: response.file_path
+            })
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.log('Error getting complaints responses: ', error);
     }
 })
 

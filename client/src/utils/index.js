@@ -222,3 +222,37 @@ export const cacnelAppointment = async (appointment_id, appointment_date) => {
         console.error('Error Canceling Appointment:', error);
     }
 }
+
+export const getUserComplaintsResponses = async (user) => {
+    try {
+        console.log(user);
+        const response = await axios.get('http://localhost:3100/getusercomplaintsresponses', {
+            params: {
+                user: user
+            },
+            withCredentials: true
+        });
+        if (response.data.error) {
+            console.log(response.data.error);
+        }
+        console.log(response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Error Getting User Complaints Responses:', error);
+    }
+}
+
+export const getComplaintsResponses = async () => {
+    try {
+        const response = await axios.get('http://localhost:3100/getcomplaintsresponses', {
+            withCredentials: true
+        });
+        if (response.data.error) {
+            console.log(response.data.error);
+        }
+        console.log(response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Error Getting Complaints Responses:', error);
+    }
+}

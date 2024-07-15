@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { getComplaints, getReservedTimes } from '../utils';
+import { getComplaints, getComplaintsResponses, getReservedTimes } from '../utils';
 import Complaints from './Complaints';
+import ComplaintsResponses from './ComplaintsResponses';
 
 const HomepageAccountant = ({ user, formatDate, getBookedDaysHelper }) => {
     const [value, setValue] = useState(new Date());
@@ -13,9 +14,8 @@ const HomepageAccountant = ({ user, formatDate, getBookedDaysHelper }) => {
     const [complaints, setComplaints] = useState([]);
     const [isOpen, setIsOpen] = useState(false);
 
-    useEffect(() => {
-        getComplaintsHelper();
-    }, []);
+    const [complaintsResponses, setComplaintsResponses] = useState([]);
+    const [isOpen2, setIsOpen2] = useState(false);
 
     const dateChosen = async (date) => {
         try {
@@ -33,11 +33,22 @@ const HomepageAccountant = ({ user, formatDate, getBookedDaysHelper }) => {
 
     const getComplaintsHelper = async () => {
         try {
-            const temp = await getComplaints();
-            console.log(temp);
-            setComplaints(temp);
+            const data = await getComplaints();
+            setComplaints(data);
         } catch (error) {
             console.error('Error getting complaints: ', error)
+        }
+    }
+
+    const getComplaintsResponsesHelper = async () => {
+        try {
+            const data = await getComplaintsResponses();
+            if (data.error) {
+                throw data.error;
+            }
+            setComplaintsResponses(data);
+        } catch (error) {
+            console.error('Error getting complaints responses:', error);
         }
     }
 
@@ -52,8 +63,13 @@ const HomepageAccountant = ({ user, formatDate, getBookedDaysHelper }) => {
                 <div className="text-white font-semibold">Welcome {user.name}</div>
                 <div>
                     <button className="bg-white text-blue-600 py-2 px-4 rounded-md mr-2 
-          hover:bg-blue-500 hover:text-white" onClick={() => { setIsOpen(true) }}>
-                        Show Complaints
+          hover:bg-blue-500 hover:text-white" onClick={async () => { await getComplaintsHelper(); setIsOpen(true) }}>
+                        Show Inquiries
+                    </button>
+                    <button className="bg-white text-blue-600 py-2 px-4 rounded-md mr-2 
+          hover:bg-blue-500 hover:text-white"
+                        onClick={async () => { await getComplaintsResponsesHelper(); setIsOpen2(true) }}>
+                        Addressed Inquiries
                     </button>
                     <button className="bg-white text-blue-600 py-2 px-4 rounded-md 
           hover:bg-blue-500 hover:text-white" onClick={logOut}>
@@ -77,6 +93,8 @@ const HomepageAccountant = ({ user, formatDate, getBookedDaysHelper }) => {
                 ))}
             </div>
             <Complaints isOpen={isOpen} closeWin={() => setIsOpen(false)} complaints={complaints} />
+            <ComplaintsResponses isOpen={isOpen2} closeWin={() => { setIsOpen2(false) }}
+                complaintsResponses={complaintsResponses} isAccountant={true} />
         </>
     )
 }
