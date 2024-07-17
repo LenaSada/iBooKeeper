@@ -3,11 +3,13 @@ import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import {
     getAvailableTimes,
+    getUserComplaintsResponses,
     getUserAppointments,
     setAppointment
 } from '../utils';
 import Appointments from './Appointments';
 import SendComplaint from './SendComplaint';
+import ComplaintsResponses from './ComplaintsResponses';
 
 const HomepageUser = ({ user, formatDate, getBookedDaysHelper }) => {
     const [selectedTime, setSelectedTime] = useState('');
@@ -25,6 +27,9 @@ const HomepageUser = ({ user, formatDate, getBookedDaysHelper }) => {
     const [appointments_dates, setAppointments_dates] = useState([]);
 
     const [isOpen2, setIsOpen2] = useState(false);
+
+    const [complaintsResponses, setComplaintsResponses] = useState([]);
+    const [isOpen3, setIsOpen3] = useState(false);
 
     useEffect(() => {
         getBookedDaysHelper(setBookedDays);
@@ -73,6 +78,19 @@ const HomepageUser = ({ user, formatDate, getBookedDaysHelper }) => {
         }
     }
 
+    const getUserComplaintsResponsesHelper = async () => {
+        try {
+            const data = await getUserComplaintsResponses(user);
+            if (data.error) {
+                throw data.error;
+            }
+            setComplaintsResponses(data);
+        } catch (error) {
+            console.error('Error getting complaints responses:', error);
+            setError(error);
+        }
+    }
+
     const logOut = () => {
         document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
         window.location.href = "/";
@@ -85,7 +103,7 @@ const HomepageUser = ({ user, formatDate, getBookedDaysHelper }) => {
                 <div>
                     <button className="bg-white text-blue-600 py-2 px-4 rounded-md mr-2 
           hover:bg-blue-500 hover:text-white" onClick={() => setIsOpen2(true)}>
-                        Send a Complaint
+                        Send an Inquiry
                     </button>
                     <button className="bg-white text-blue-600 py-2 px-4 rounded-md mr-2 
           hover:bg-blue-500 hover:text-white" onClick={async () => {
@@ -93,6 +111,13 @@ const HomepageUser = ({ user, formatDate, getBookedDaysHelper }) => {
                             setIsOpen(true)
                         }}>
                         Show Appointments
+                    </button>
+                    <button className="bg-white text-blue-600 py-2 px-4 rounded-md mr-2 
+          hover:bg-blue-500 hover:text-white" onClick={async () => {
+                            await getUserComplaintsResponsesHelper();
+                            setIsOpen3(true)
+                        }}>
+                        Inquiries Responses
                     </button>
                     <button className="bg-white text-blue-600 py-2 px-4 rounded-md 
           hover:bg-blue-500 hover:text-white" onClick={logOut}>
@@ -139,6 +164,8 @@ const HomepageUser = ({ user, formatDate, getBookedDaysHelper }) => {
             <Appointments isOpen={isOpen} closeWin={() => { setIsOpen(false) }}
                 appointments={appointments} appointments_dates={appointments_dates} />
             <SendComplaint isOpen={isOpen2} closeWin={() => { setIsOpen2(false) }} user={user} />
+            <ComplaintsResponses isOpen={isOpen3} closeWin={() => { setIsOpen3(false) }}
+                complaintsResponses={complaintsResponses} />
         </div>
     )
 }

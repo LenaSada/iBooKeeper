@@ -28,7 +28,7 @@ const Complaints = ({ isOpen, closeWin, complaints }) => {
 
     const sendComplaintResponseHelper = async (user_id, response, complaint, index) => {
         try {
-            const data = await sendComplaintResponse(user_id, response, complaint._id, formData);
+            const data = await sendComplaintResponse(user_id, response, complaint.id, formData);
             complaints.splice(index, 1);
             if (index < complaints.length) {
                 responses[index] = '';
@@ -50,15 +50,16 @@ const Complaints = ({ isOpen, closeWin, complaints }) => {
     return (
         <MyDialog isOpen={isOpen} closeWin={closeWin}>
             <div key={timestamp}>
-                <h1 className='text-3xl'>Users complaints</h1>
+                <h1 className='text-3xl'>Users Inquiries</h1>
                 {complaints && complaints.map((complaint, index) => (
                     <div key={index} className='flex flex-col pt-5 '>
                         <ExpandableButton content={complaint.subject} onClickFunc={expandComplaint}
                             btnKey={index} expand={expandedBtns[index]} />
                         {expandedBtns[index] &&
                             <div className='m-3'>
+                                <h1 className='font-semibold text-xl'>User Name: {complaint.user_name}<br></br></h1>
                                 <h1 className='font-semibold text-xl'>{complaint.subject}<br></br></h1>
-                                <h1>{complaint.complaint}</h1>
+                                <p>{complaint.complaint}</p>
                                 <div>
                                     <button className='sign-in__btn'
                                         onClick={() => { downloadFile(complaint.file_path) }}>
