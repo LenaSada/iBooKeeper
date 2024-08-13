@@ -1,15 +1,13 @@
 import MyDialog from './MyDialog';
 import { useState } from 'react';
 import { sendComplaint } from '../utils';
+import Alert from '@mui/material/Alert';
 
 const SendComplaint = ({ isOpen, closeWin, user }) => {
     const [complaintSubject, setComplaintSubject] = useState('');
     const [complaintTxt, setComplaintTxt] = useState('');
     const formData = new FormData();
-
-    const sendComplaintHelper = async () => {
-
-    }
+    const [isSent, setIsSent] = useState(false);
 
     const handleFileChange = async (event) => {
         try {
@@ -21,7 +19,12 @@ const SendComplaint = ({ isOpen, closeWin, user }) => {
 
     const handleSubmit = async (file) => {
         try {
-            await sendComplaint(user, complaintSubject, complaintTxt, formData);
+            const data = await sendComplaint(user, complaintSubject, complaintTxt, formData);
+            if (data === 'Saved') {
+                setIsSent(true);
+            } else {
+
+            }
         } catch (error) {
             console.error('Error sending complaint:', error);
         }
@@ -29,22 +32,33 @@ const SendComplaint = ({ isOpen, closeWin, user }) => {
 
     return (
         <MyDialog isOpen={isOpen} closeWin={closeWin}>
-            <h1 className='text-3xl'>What's your complaint?</h1>
-            <input
-            type='text'
-            value={complaintSubject}
-            className='bar__input m-2'
-            onChange={(e) => setComplaintSubject(e.target.value)}
-         />
-            <textarea
-                value={complaintTxt}
-                className='bar__input m-2'
-                rows={10}
-                cols={50}
-                onChange={(e) => setComplaintTxt(e.target.value)}
-            />
-            <input type='file' onChange={handleFileChange} />
-            <button onClick={handleSubmit}>Upload</button>
+            {!isSent &&
+                <>
+                    <h1 className='text-3xl'>What's your complaint?</h1>
+                    <input
+                        type='text'
+                        value={complaintSubject}
+                        className='bar__input m-2'
+                        onChange={(e) => setComplaintSubject(e.target.value)}
+                    />
+                    <textarea
+                        value={complaintTxt}
+                        className='bar__input m-2'
+                        rows={10}
+                        cols={50}
+                        onChange={(e) => setComplaintTxt(e.target.value)}
+                    />
+                    <input type='file' onChange={handleFileChange} />
+                    <button onClick={handleSubmit}>Upload</button>
+                </>
+            }
+            {isSent &&
+                <>
+                    <Alert className='flex justify-center items-center'
+                        severity="success">Inquiry Sent.</Alert>
+                    <button onClick={() => { setIsSent(false) }}>Send New Inquiry</button>
+                </>
+            }
         </MyDialog>
     )
 }

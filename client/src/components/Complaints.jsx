@@ -9,6 +9,7 @@ const Complaints = ({ isOpen, closeWin, complaints }) => {
     const [timestamp, setTimestamp] = useState(Date.now());
 
     const formData = new FormData();
+    const [search, setSearch] = useState('');
 
     const expandComplaint = (isExpanded, btnKey) => {
         const newExpandedBtns = [...expandedBtns];
@@ -51,39 +52,50 @@ const Complaints = ({ isOpen, closeWin, complaints }) => {
         <MyDialog isOpen={isOpen} closeWin={closeWin}>
             <div key={timestamp}>
                 <h1 className='text-3xl'>Users Inquiries</h1>
+                <input
+                    type='text'
+                    value={search}
+                    className='bar__input m-2'
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder='Search for inquiry by User Name'
+                />
                 {complaints && complaints.map((complaint, index) => (
-                    <div key={index} className='flex flex-col pt-5 '>
-                        <ExpandableButton content={complaint.subject} onClickFunc={expandComplaint}
-                            btnKey={index} expand={expandedBtns[index]} />
-                        {expandedBtns[index] &&
-                            <div className='m-3'>
-                                <h1 className='font-semibold text-xl'>User Name: {complaint.user_name}<br></br></h1>
-                                <h1 className='font-semibold text-xl'>{complaint.subject}<br></br></h1>
-                                <p>{complaint.complaint}</p>
-                                <div>
-                                    <button className='sign-in__btn'
-                                        onClick={() => { downloadFile(complaint.file_path) }}>
-                                        {complaint.file_path}
-                                    </button>
-                                </div>
-                                <textarea
-                                    value={responses[index]}
-                                    onChange={(e) => modifyResponses(e.target.value, index)}
-                                    className='bar__input m-2'
-                                    rows={10}
-                                    cols={50}
-                                />
-                                <input type='file' onChange={handleFileChange} />
-                                <button
-                                    className='rounded-full sign-in__btn min-h-[30px] min-w-[130px]'
-                                    onClick={() => {
-                                        sendComplaintResponseHelper(complaint.user, responses[index],
-                                            complaints[index], index)
-                                    }}
-                                >Send Response</button>
+                    <>
+                        {(!search.trim() || complaint.user_name.toLowerCase().includes(search.toLowerCase())) &&
+                            <div key={index} className='flex flex-col pt-5 '>
+                                <ExpandableButton content={complaint.subject} onClickFunc={expandComplaint}
+                                    btnKey={index} expand={expandedBtns[index]} />
+                                {expandedBtns[index] &&
+                                    <div className='m-3'>
+                                        <h1 className='font-semibold text-xl'>User Name: {complaint.user_name}<br></br></h1>
+                                        <h1 className='font-semibold text-xl'>{complaint.subject}<br></br></h1>
+                                        <p>{complaint.complaint}</p>
+                                        <div>
+                                            <button className='sign-in__btn'
+                                                onClick={() => { downloadFile(complaint.file_path) }}>
+                                                {complaint.file_path}
+                                            </button>
+                                        </div>
+                                        <textarea
+                                            value={responses[index]}
+                                            onChange={(e) => modifyResponses(e.target.value, index)}
+                                            className='bar__input m-2'
+                                            rows={10}
+                                            cols={50}
+                                        />
+                                        <input type='file' onChange={handleFileChange} />
+                                        <button
+                                            className='rounded-full sign-in__btn min-h-[30px] min-w-[130px]'
+                                            onClick={() => {
+                                                sendComplaintResponseHelper(complaint.user, responses[index],
+                                                    complaints[index], index)
+                                            }}
+                                        >Send Response</button>
+                                    </div>
+                                }
                             </div>
                         }
-                    </div>
+                    </>
                 ))}
             </div>
         </MyDialog>

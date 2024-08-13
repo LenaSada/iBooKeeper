@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 
 function generateTimeIntervals() {
-    const time_intervals={};
-    for(let i=8;i<=20;i+=0.5) {
-        time_intervals[i]=null;
+    const time_intervals = {};
+    for (let i = 8; i <= 20; i += 0.5) {
+        time_intervals[i] = null;
     }
     return time_intervals;
 }
@@ -14,6 +14,14 @@ const appointmentsSchema = new mongoose.Schema({
         unique: true
     },
     time_intervals: {
+        type: mongoose.Schema.Types.Mixed,
+        default: generateTimeIntervals
+    },
+    locations: {
+        type: mongoose.Schema.Types.Mixed,
+        default: generateTimeIntervals
+    },
+    matters: {
         type: mongoose.Schema.Types.Mixed,
         default: generateTimeIntervals
     }

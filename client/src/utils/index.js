@@ -69,12 +69,29 @@ export const getBookedDays = async () => {
     }
 }
 
-export const setAppointment = async (date_formatted, time, user) => {
+export const getAppointedDays = async () => {
+    try {
+        const response = await axios.get('http://localhost:3100/appointeddays', {
+            withCredentials: true
+        });
+        if (response.data.error) {
+            console.log(response.data.error);
+        }
+
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching appointed days:', error);
+    }
+}
+
+export const setAppointment = async (date_formatted, time, user, appointmentLocation, appointmentMatter) => {
     try {
         const response = await axios.post('http://localhost:3100/setappointment', {
             date_formatted: date_formatted,
             time,
-            user
+            user,
+            location: appointmentLocation,
+            appointmentMatter: appointmentMatter
         }, {
             withCredentials: true
         });

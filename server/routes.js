@@ -39,6 +39,7 @@ router.post('/signin', async (req, res) => {
             })
     } catch (error) {
         console.log('Error signing in: ', error);
+        return res.status(500).send('Error signing in');
     }
 });
 
@@ -56,6 +57,7 @@ router.get('/getuser', async (req, res) => {
         }
     } catch (error) {
         console.log('Error getting user: ', error);
+        return res.status(500).send('Error getting user');
     }
 })
 
@@ -80,6 +82,7 @@ router.post('/signup', async (req, res) => {
         res.json("User is saved");
     } catch (error) {
         console.log('Error signing up: ', error);
+        return res.status(500).send('Error signing up');
     }
 });
 
@@ -115,7 +118,9 @@ const getTimes = async (date_formatted, get_available = true) => {
             const user = await User.findById(day.time_intervals[key]);
             const user_name = user.name;
             const id = day.time_intervals[key];
-            available_hours.push({ val, user_name, id });
+            const location = day.locations[key];
+            const matter = day.matters[key];
+            available_hours.push({ val, user_name, id, location, matter });
         }
     }
     if (!get_available) {
@@ -131,6 +136,7 @@ router.post('/getavailabletimes', async (req, res) => {
         res.json(available_hours);
     } catch (error) {
         console.log("Error getting available times: ", error);
+        return res.status(500).send('Error getting available times');
     }
 });
 
@@ -141,6 +147,7 @@ router.post('/getreservedtimes', async (req, res) => {
         res.json(available_hours);
     } catch (error) {
         console.log("Error getting reserved times: ", error);
+        return res.status(500).send('Error getting reserved times');
     }
 });
 
@@ -166,9 +173,31 @@ router.get('/bookedDays', async (req, res) => {
     res.json(bookedDays);
 });
 
+router.get('/appointeddays', async (req, res) => {
+    appointedDays = {}
+    await Appointments.find({})
+        .then(appointments => {
+            for (const appointment of appointments) {
+                let test = false;
+                for (const key in appointment.time_intervals) {
+                    if (appointment.time_intervals[key] !== null) {
+                        test = true;
+                        break;
+                    }
+                }
+                if (test === true) {
+                    appointedDays[appointment.date] = true;
+                }
+            }
+        })
+        .catch(error => console.error(error));
+    console.log(appointedDays);
+    res.json(appointedDays);
+});
+
 router.post('/setappointment', async (req, res) => {
     try {
-        const { date_formatted, time, user } = req.body;
+        const { date_formatted, time, user, location, appointmentMatter } = req.body;
         // date used to fetch the specific appointment
         const date = date_formatted.substring(0, 10);
         // Fetching user to attach to appointment
@@ -193,6 +222,10 @@ router.post('/setappointment', async (req, res) => {
 
         const updatedTimeIntervals = { ...appointment.time_intervals, [index]: user_id };
         appointment.time_intervals = updatedTimeIntervals;
+        const updatedLocation = { ...appointment.locations, [index]: location };
+        appointment.locations = updatedLocation;
+        const updatedMatter = { ...appointment.matters, [index]: appointmentMatter };
+        appointment.matters = updatedMatter;
         await appointment.save();
 
         user2.appointments.push(appointment.id);
@@ -202,6 +235,7 @@ router.post('/setappointment', async (req, res) => {
         res.json('Appointment Set!')
     } catch (error) {
         console.log('Error Setting Appointment: ', error);
+        return res.status(500).send('Error Setting Appointment');
     }
 });
 
@@ -221,6 +255,7 @@ router.get('/getuserappointments', async (req, res) => {
         }
     } catch (error) {
         console.log('Error getting user: ', error);
+        return res.status(500).send('Error getting user');
     }
 });
 
@@ -260,6 +295,7 @@ router.post('/cancelappointment', async (req, res) => {
         res.json('Appointment Canceled!');
     } catch (error) {
         console.log('Error canceling appointment: ', error);
+        return res.status(500).send('Error canceling appointment');
     }
 });
 
@@ -300,6 +336,7 @@ const send_mail = async (mail, subject, txt, file_name, file_path) => {
         });
     } catch (error) {
         console.log('Error sending file: ', error);
+        return res.status(500).send('Error sending file');
     }
 }
 
@@ -337,6 +374,7 @@ cron.schedule("0 0 * * * *", async function () {
         }
     } catch (error) {
         console.log('Error crontabing: ', error);
+        return res.status(500).send('Error crontabing');
     }
 })
 
@@ -377,6 +415,7 @@ router.post('/sendcomplaint', upload.single('file'), async (req, res) => {
         res.json('Saved');
     } catch (error) {
         console.log('Error saving complaint: ', error);
+        return res.status(500).send('Error saving complaint');
     }
 })
 
@@ -408,6 +447,7 @@ router.post('/sendcomplaintresponse', upload.single('file'), async (req, res) =>
         res.json("Response Sent!");
     } catch (error) {
         console.log('Error sending complaint response: ', error);
+        return res.status(500).send('Error sending complaint response');
     }
 })
 
@@ -431,6 +471,7 @@ router.get('/getcomplaints', async (req, res) => {
         res.json(result);
     } catch (error) {
         console.log('Error getting complaint: ', error);
+        return res.status(500).send('Error getting complaint');
     }
 })
 
@@ -457,6 +498,7 @@ router.get('/getusercomplaintsresponses', async (req, res) => {
         res.json(result);
     } catch (error) {
         console.log('Error getting user complaints responses: ', error);
+        return res.status(500).send('EError getting user complaints responses');
     }
 })
 
@@ -483,6 +525,7 @@ router.get('/getcomplaintsresponses', async (req, res) => {
         res.json(result);
     } catch (error) {
         console.log('Error getting complaints responses: ', error);
+        return res.status(500).send('Error getting complaint responses');
     }
 })
 
@@ -496,6 +539,7 @@ router.get('/getfile', async (req, res) => {
         res.download(file_path);
     } catch (error) {
         console.log('Error sending file: ', error);
+        return res.status(500).send('Error sending file');
     }
 })
 

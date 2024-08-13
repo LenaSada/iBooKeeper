@@ -10,7 +10,7 @@ const ExpandableButton = ({ content, onClickFunc, btnKey, expand }) => {
 
     return (
         <button className="flex items-center justify-between 
-        pl-5 pb-2 pr-5 w-full rounded-full complaint__btn text-2xl" 
+        pl-5 pb-2 pr-5 w-full rounded-full complaint__btn text-2xl hover:nav-color" 
         onClick={buttonClicked}>
             <div>
                 {content}
