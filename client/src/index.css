@@ -48,3 +48,17 @@ code {
   box-shadow: 1px 1px 3px #0f141b,
   -1px -1px 3px #0f141b;
 }
+
+.react-calendar__tile.appointed-day {
+  background-color: #ffcccb;
+  color: white;
+}
+
+.h-\[50px\] {
+  height: 50px;
+}
+
+.nav-color {
+  --tw-bg-opacity: 1;
+  background-color: rgb(40 40 40 / var(--tw-bg-opacity));
+}

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { getComplaints, getComplaintsResponses, getReservedTimes } from '../utils';
+import { getAppointedDays, getComplaints, getComplaintsResponses, getReservedTimes } from '../utils';
 import Complaints from './Complaints';
 import ComplaintsResponses from './ComplaintsResponses';
 
 const HomepageAccountant = ({ user, formatDate, getBookedDaysHelper }) => {
+    const [appointedDays, setAppointedDays] = useState({});
     const [value, setValue] = useState(new Date());
     const today = new Date();
     const [note, setNote] = useState("");
@@ -16,6 +17,30 @@ const HomepageAccountant = ({ user, formatDate, getBookedDaysHelper }) => {
 
     const [complaintsResponses, setComplaintsResponses] = useState([]);
     const [isOpen2, setIsOpen2] = useState(false);
+
+    useEffect(() => {
+        getAppointedDaysHelper();
+    }, []);
+
+    const getAppointedDaysHelper = async () => {
+        try {
+            const data = await getAppointedDays();
+            setAppointedDays(data);
+        } catch (error) {
+            console.error('Error in getting appointed days:', error);
+        }
+    }
+
+    const tileClassName = ({ date, view }) => {
+        if (view === 'month') {
+            const dateString = formatDate(date).split('T')[0];
+            console.log(dateString);
+            if (appointedDays[dateString]) {
+                return 'appointed-day';
+            }
+        }
+        return null;
+    };
 
     const dateChosen = async (date) => {
         try {
@@ -59,20 +84,21 @@ const HomepageAccountant = ({ user, formatDate, getBookedDaysHelper }) => {
 
     return (
         <>
-            <nav className="bg-blue-600 p-4 flex justify-between items-center mb-10">
+            <nav className="nav-color h-[50px] p-4 flex justify-between items-center mb-10">
                 <div className="text-white font-semibold">Welcome {user.name}</div>
                 <div>
-                    <button className="bg-white text-blue-600 py-2 px-4 rounded-md mr-2 
-          hover:bg-blue-500 hover:text-white" onClick={async () => { await getComplaintsHelper(); setIsOpen(true) }}>
-                        Show Inquiries
+                    <button className="text-gray-300 py-2 px-4 rounded-md mr-2
+            hover:text-white"
+                        onClick={async () => { await getComplaintsHelper(); setIsOpen(true) }}>
+                        Show Complaints
                     </button>
-                    <button className="bg-white text-blue-600 py-2 px-4 rounded-md mr-2 
-          hover:bg-blue-500 hover:text-white"
+                    <button className="text-gray-300 py-2 px-4 rounded-md mr-2
+            hover:text-white"
                         onClick={async () => { await getComplaintsResponsesHelper(); setIsOpen2(true) }}>
-                        Addressed Inquiries
+                        Addressed Complaints
                     </button>
-                    <button className="bg-white text-blue-600 py-2 px-4 rounded-md 
-          hover:bg-blue-500 hover:text-white" onClick={logOut}>
+                    <button className="text-gray-300 py-2 px-4 rounded-md mr-2
+            hover:text-white" onClick={logOut}>
                         Log Out
                     </button>
                 </div>
@@ -80,14 +106,17 @@ const HomepageAccountant = ({ user, formatDate, getBookedDaysHelper }) => {
 
             <div className='flex flex-col'>
                 <div className='flex flex-col'>
-                    <Calendar className='m-auto' onChange={dateChosen} value={value} minDate={today} />
+                    <Calendar className='m-auto' onChange={dateChosen} value={value} minDate={today}
+                        tileClassName={tileClassName} />
                 </div>
                 {reserved_times.map((time, index) => (
                     <div className='flex flex-col' key={index}>
                         <div className='sign-in__bar' id='signin'>
-                            <h2 className='txt-3xl font-bold'>{time.val}</h2>
-                            <h3>ID: {time.id}</h3>
-                            <h3>Name: {time.user_name}</h3>
+                            <p className='txt-5xl font-bold'>{time.val}</p>
+                            <h3><b>ID:</b> {time.id}</h3>
+                            <h3><b>Name:</b> {time.user_name}</h3>
+                            <h3><b>Location:</b> {time.location}</h3>
+                            <h3><b>Appointment Matter:</b> {time.matter}</h3>
                         </div>
                     </div>
                 ))}
