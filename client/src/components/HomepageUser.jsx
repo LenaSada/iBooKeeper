@@ -17,6 +17,7 @@ const HomepageUser = ({ user, formatDate, getBookedDaysHelper }) => {
     const [value, setValue] = useState(new Date());
     const today = new Date();
     const [note, setNote] = useState('');
+    const [confirmation, setConfirmationr] = useState('');
     const [error, setError] = useState('');
     const [error2, setError2] = useState('');
     const [available_times, setAvailable_times] = useState([]);
@@ -57,6 +58,7 @@ const HomepageUser = ({ user, formatDate, getBookedDaysHelper }) => {
 
     const dateChosen = async (date) => {
         try {
+            setConfirmationr('');
             setError('');
             setError2('');
             const temp = formatDate(date);
@@ -80,10 +82,14 @@ const HomepageUser = ({ user, formatDate, getBookedDaysHelper }) => {
             if (!data) {
                 throw 'Failed to set appointment!';
             }
+            setConfirmationr('Appointment was set successfully!');
             setAvailable_times(await getAvailableTimes(current_date));
             setSelectedTime('');
             setAppointmentLocation('');
             setAppointmentMatter('');
+            if (data.error) {
+                setError(data.error);
+            }
         } catch (error) {
             console.error('Error scheduling an appointment:', error);
             setError(error);
@@ -115,7 +121,7 @@ const HomepageUser = ({ user, formatDate, getBookedDaysHelper }) => {
                 <div>
                     <button className="text-gray-300 py-2 px-4 rounded-md mr-2
                     hover:text-white" onClick={() => setIsOpen2(true)}>
-                        Send a Complaint
+                        Send an Inquiry
                     </button>
                     <button className="text-gray-300 py-2 px-4 rounded-md mr-2
                     hover:text-white" onClick={async () => {
@@ -129,7 +135,7 @@ const HomepageUser = ({ user, formatDate, getBookedDaysHelper }) => {
                             await getUserComplaintsResponsesHelper();
                             setIsOpen3(true)
                         }}>
-                        Complaints Responses
+                        Inquiries Responses
                     </button>
                     <button className="text-gray-300 py-2 px-4 rounded-md mr-2
                     hover:text-white" onClick={logOut}>
@@ -148,6 +154,7 @@ const HomepageUser = ({ user, formatDate, getBookedDaysHelper }) => {
                         />
                         <label>{note}</label>
                         <label className='text-red-800'>{error}</label>
+                        <label className='text-green-800'>{confirmation}</label>
                     </div>
 
                     <div className='flex flex-col items-center mt-8'>
@@ -176,8 +183,7 @@ const HomepageUser = ({ user, formatDate, getBookedDaysHelper }) => {
                             >
                                 <option value='' disabled>Select Appointment Location</option>
                                 <option value='Zoom'>Zoom</option>
-                                <option value='Tel Aviv Office'>Tel Aviv Office</option>
-                                <option value='Haifa Office'>Haifa Office</option>
+                                <option value='Nof Hagalil Office'>Nof Hagalil Office</option>
                             </select>
                         </div>
                         <div className='w-1/3 mb-4'>
