@@ -204,7 +204,6 @@ router.post('/setappointment', async (req, res) => {
         const user2 = await User.findOne({ email: user.email })
 
         const date1Obj = new Date(date);
-        console.log(user2);
         for (let i = 0; i < user2.appointments_dates.length; i++) {
             const date2Obj = new Date(user2.appointments_dates[i]);
             const timeDifference = date2Obj - date1Obj;
@@ -231,6 +230,25 @@ router.post('/setappointment', async (req, res) => {
         user2.appointments.push(appointment.id);
         user2.appointments_dates.push(appointment.date + " " + time);
         await user2.save();
+
+        const eventName = encodeURIComponent("Meeting with Accountant");
+
+        const start = date_formatted.replace(/21:00/g, time);
+        const startDate = (start.split('.')[0]).replace(/[-:]/g, '');
+        let end = start
+        if (end[14] == '3'){
+            end = end.substring(0, 14) + '0' + end.substring(15);
+            end = end.substring(0, 11) + String(Number(time.substring(0, 2)) + 1) + end.substring(13);
+        } else {
+            end = end.substring(0, 14) + '3' + end.substring(15);
+        }
+
+        const endDate = end.replace(/[-:]/g, '').split('.')[0];
+        const description = location == 'Zoom' ? encodeURIComponent(appointmentMatter + '\nhttps://zoom.com/...') : encodeURIComponent(appointmentMatter)
+        const location_url = encodeURIComponent(location);
+        const googleCalendarUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${eventName}&dates=${startDate}/${endDate}&details=${description}&location=${location_url}`;
+
+        send_mail(user.email, 'New Appointment Set', `New Appointment with accountant was set at {startDate}`, "", "", googleCalendarUrl);
 
         res.json('Appointment Set!')
     } catch (error) {
@@ -299,7 +317,7 @@ router.post('/cancelappointment', async (req, res) => {
     }
 });
 
-const send_mail = async (mail, subject, txt, file_name, file_path) => {
+const send_mail = async (mail, subject, txt, file_name, file_path, googleCalendarUrl = "") => {
     try {
         console.log(mail);
         var transporter = nodemailer.createTransport({
@@ -320,6 +338,14 @@ const send_mail = async (mail, subject, txt, file_name, file_path) => {
             subject: subject,
             text: txt
         };
+
+        if (googleCalendarUrl) {
+            mailOptions.html = `<p>You have a meeting scheduled. Click the button below to add it to your Google Calendar:</p>
+         <a href="${googleCalendarUrl}" style="display: inline-block; padding: 10px 20px; font-size: 16px; color: white; background-color: #4285f4; text-decoration: none; border-radius: 5px;">
+             Add to Google Calendar
+         </a>`
+        }
+
         if (file_name) {
             mailOptions.attachments = [
                 { filename: file_name, path: file_path }
@@ -329,14 +355,14 @@ const send_mail = async (mail, subject, txt, file_name, file_path) => {
         transporter.sendMail(mailOptions, (err, data) => {
             if (err) {
                 console.error('Error occurs', err);
-                return res.status(500).send('Error sending email');
+                return;
             }
             console.log('Email sent!!!');
             return res.send('ok');
         });
     } catch (error) {
         console.log('Error sending file: ', error);
-        return res.status(500).send('Error sending file');
+        return error;
     }
 }
 
@@ -430,13 +456,13 @@ router.post('/sendcomplaintresponse', upload.single('file'), async (req, res) =>
         const subject = complaint.subject;
         if (req.file && req.file.filename) {
             const file_name = 'uploads/' + req.file.filename;
-            send_mail(user.email, subject, complaintResponse, file_name, './' + file_name);
+            send_mail(user.email, subject, 'You recieved a response to a complaint, Log In to the website to view it');
             complaint_response = await ComplaintResponse.create({
                 complaint: complaint, user: user,
                 response: complaintResponse, file_path: file_name
             })
         } else {
-            send_mail(user.email, subject, complaintResponse);
+            send_mail(user.email, subject,  'You recieved a response to a complaint, Log In to the website to view it');
             complaint_response = await ComplaintResponse.create({
                 complaint: complaint, user: user,
                 response: complaintResponse

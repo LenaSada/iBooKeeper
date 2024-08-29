@@ -90,12 +90,12 @@ const HomepageAccountant = ({ user, formatDate, getBookedDaysHelper }) => {
                     <button className="text-gray-300 py-2 px-4 rounded-md mr-2
             hover:text-white"
                         onClick={async () => { await getComplaintsHelper(); setIsOpen(true) }}>
-                        Show Complaints
+                        Show Inquiries
                     </button>
                     <button className="text-gray-300 py-2 px-4 rounded-md mr-2
             hover:text-white"
                         onClick={async () => { await getComplaintsResponsesHelper(); setIsOpen2(true) }}>
-                        Addressed Complaints
+                        Addressed Inquiries
                     </button>
                     <button className="text-gray-300 py-2 px-4 rounded-md mr-2
             hover:text-white" onClick={logOut}>
