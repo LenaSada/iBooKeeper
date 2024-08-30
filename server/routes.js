@@ -236,7 +236,7 @@ router.post('/setappointment', async (req, res) => {
         const start = date_formatted.replace(/21:00/g, time);
         const startDate = (start.split('.')[0]).replace(/[-:]/g, '');
         let end = start
-        if (end[14] == '3'){
+        if (end[14] == '3') {
             end = end.substring(0, 14) + '0' + end.substring(15);
             end = end.substring(0, 11) + String(Number(time.substring(0, 2)) + 1) + end.substring(13);
         } else {
@@ -314,6 +314,39 @@ router.post('/cancelappointment', async (req, res) => {
     } catch (error) {
         console.log('Error canceling appointment: ', error);
         return res.status(500).send('Error canceling appointment');
+    }
+});
+
+router.post('/accountantcancelappointment', async (req, res) => {
+    const { appointment_date, index, user_id, cancelationReason } = req.body;
+    try {
+        // Deleting the appointment from the Appointments Schema
+        const appointment = await Appointments.findOne({ date: appointment_date });
+        const new_time_intervals = { ...appointment.time_intervals };
+        new_time_intervals[index] = null;
+        appointment.time_intervals = new_time_intervals;
+        const appointment_id = appointment.id;
+        await appointment.save();
+
+        // Deleting the appontment from the User's appointments array (in the User Schema)
+        const user = await User.findById(user_id);
+        let i = 0
+        console.log(appointment_id);
+        for (i = 0; i < user.appointments.length; i++) {
+            if (user.appointments[i] == appointment_id) {
+                break;
+            }
+        }
+        user.appointments.splice(i, 1);
+        user.appointments_dates.splice(i, 1);
+        await user.save();
+
+        send_mail(user.email, 'Appointment Canceled', `Appointment Canceled By Accountant at date ${appointment.date}!\n
+            Cancelation Reason: ${cancelationReason}`)
+        res.json('Appointment Canceled By Accountant!');
+    } catch (error) {
+        console.log('Error canceling appointment by accountant: ', error);
+        return res.status(500).send('Error canceling appointment by accountant');
     }
 });
 
@@ -462,7 +495,7 @@ router.post('/sendcomplaintresponse', upload.single('file'), async (req, res) =>
                 response: complaintResponse, file_path: file_name
             })
         } else {
-            send_mail(user.email, subject,  'You recieved a response to a complaint, Log In to the website to view it');
+            send_mail(user.email, subject, 'You recieved a response to a complaint, Log In to the website to view it');
             complaint_response = await ComplaintResponse.create({
                 complaint: complaint, user: user,
                 response: complaintResponse
@@ -508,18 +541,29 @@ router.get('/getcomplaints', async (req, res) => {
 router.get('/getusercomplaintsresponses', async (req, res) => {
     try {
         const { user } = req.query;
-        const user_id = (await User.findOne({ email: user.email }))._id;
-        user_responses = await ComplaintResponse.find({ user: user_id });
-
-        let result = [];
-        for (let response of user_responses) {
-            const complaint = await Complaint.findById(response.complaint);
-            result.push({
-                id: response._id, complaint_subject: complaint.subject, user_name: user.name,
-                complaint: complaint.complaint, complaint_file_path: complaint.file_path,
-                response: response.response, file_path: response.file_path
-            })
+        const userRecord = await User.findOne({ email: user.email }).lean();
+        if (!userRecord) {
+            return res.status(404).json({ error: "User not found" });
         }
+
+        const user_id = userRecord._id;
+
+        const user_responses = await ComplaintResponse.find({ user: user_id })
+            .populate('complaint')
+            .lean(); // Use .lean() for better performance
+
+        const result = user_responses.map(response => ({
+            id: response._id,
+            complaint_subject: response.complaint.subject,
+            user_name: user.name,
+            complaint: response.complaint.complaint,
+            complaint_file_path: response.complaint.file_path,
+            response: response.response,
+            file_path: response.file_path,
+            date: response.date
+        }));
+
+        result.sort((a, b) => b.date - a.date);
 
         res.json(result);
     } catch (error) {
@@ -534,19 +578,23 @@ router.get('/getusercomplaintsresponses', async (req, res) => {
 
 router.get('/getcomplaintsresponses', async (req, res) => {
     try {
-        responses = await ComplaintResponse.find({});
+        const responses = await ComplaintResponse.find({})
+            .populate('user')
+            .populate('complaint')
+            .lean(); // Use .lean() for better performance
 
-        let result = [];
-        for (let response of responses) {
-            const user = await User.findById(response.user);
-            const complaint = await Complaint.findById(response.complaint);
+        const result = responses.map(response => ({
+            id: response._id,
+            complaint_subject: response.complaint.subject,
+            user_name: response.user.name,
+            complaint: response.complaint.complaint,
+            complaint_file_path: response.complaint.file_path,
+            response: response.response,
+            file_path: response.file_path,
+            date: response.date
+        }));
 
-            result.push({
-                id: response._id, complaint_subject: complaint.subject, user_name: user.name,
-                complaint: complaint.complaint, complaint_file_path: complaint.file_path,
-                response: response.response, file_path: response.file_path
-            })
-        }
+        result.sort((a, b) => b.date - a.date);
 
         res.json(result);
     } catch (error) {

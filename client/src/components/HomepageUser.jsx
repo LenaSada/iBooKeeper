@@ -10,6 +10,10 @@ import {
 import Appointments from './Appointments';
 import SendComplaint from './SendComplaint';
 import ComplaintsResponses from './ComplaintsResponses';
+import Holidays from 'date-holidays';
+
+const holidays = new Holidays('IL'); // Initialize Holidays for Israel
+const holidayDates = holidays.getHolidays().map(holiday => holiday.date.substring(0, 10));
 
 const HomepageUser = ({ user, formatDate, getBookedDaysHelper }) => {
     const [selectedTime, setSelectedTime] = useState('');
@@ -25,6 +29,7 @@ const HomepageUser = ({ user, formatDate, getBookedDaysHelper }) => {
     const [current_date, setCurrent_date] = useState("");
 
     const [isOpen, setIsOpen] = useState(false);
+    const [isComing, setIsComing] = useState(true);
     const [appointments, setAppointments] = useState([]);
     const [appointments_dates, setAppointments_dates] = useState([]);
 
@@ -48,7 +53,6 @@ const HomepageUser = ({ user, formatDate, getBookedDaysHelper }) => {
     const getUserAppointmentsHelper = async () => {
         try {
             const data = await getUserAppointments();
-            console.log(data.appointments_dates);
             setAppointments(data.appointments);
             setAppointments_dates(data.appointments_dates);
         } catch (error) {
@@ -75,6 +79,8 @@ const HomepageUser = ({ user, formatDate, getBookedDaysHelper }) => {
     const scheduleAppointmentAtTime = async (time) => {
         try {
             if (!appointmentLocation || !appointmentMatter.trim()) {
+                setError('');
+                setConfirmationr('');
                 setError2('All fields are mandatory');
                 return;
             }
@@ -82,13 +88,18 @@ const HomepageUser = ({ user, formatDate, getBookedDaysHelper }) => {
             if (!data) {
                 throw 'Failed to set appointment!';
             }
-            setConfirmationr('Appointment was set successfully!');
             setAvailable_times(await getAvailableTimes(current_date));
             setSelectedTime('');
             setAppointmentLocation('');
             setAppointmentMatter('');
             if (data.error) {
+                setError2('');
+                setConfirmationr('');
                 setError(data.error);
+            } else {
+                setError('');
+                setError2('');
+                setConfirmationr('Appointment was set successfully!');
             }
         } catch (error) {
             console.error('Error scheduling an appointment:', error);
@@ -126,9 +137,18 @@ const HomepageUser = ({ user, formatDate, getBookedDaysHelper }) => {
                     <button className="text-gray-300 py-2 px-4 rounded-md mr-2
                     hover:text-white" onClick={async () => {
                             await getUserAppointmentsHelper();
+                            setIsComing(true);
                             setIsOpen(true)
                         }}>
                         Show Appointments
+                    </button>
+                    <button className="text-gray-300 py-2 px-4 rounded-md mr-2
+                    hover:text-white" onClick={async () => {
+                            await getUserAppointmentsHelper();
+                            setIsComing(false);
+                            setIsOpen(true)
+                        }}>
+                        Previous Appointments
                     </button>
                     <button className="text-gray-300 py-2 px-4 rounded-md mr-2
                     hover:text-white" onClick={async () => {
@@ -148,8 +168,10 @@ const HomepageUser = ({ user, formatDate, getBookedDaysHelper }) => {
                 <div className='flex flex-col'>
                     <div className='flex flex-col'>
                         <Calendar className='m-auto' onChange={dateChosen} value={value} minDate={today}
-                            tileDisabled={({ date }) =>
-                                formatDate(date).substring(0, 10) in bookedDays
+                            tileDisabled={({ date }) => {
+                                return formatDate(date).substring(0, 10) in bookedDays ||
+                                    holidayDates.includes(formatDate(date).substring(0, 10)) || (date.getDay() === 5 || date.getDay() === 6);
+                            }
                             }
                         />
                         <label>{note}</label>
@@ -177,7 +199,6 @@ const HomepageUser = ({ user, formatDate, getBookedDaysHelper }) => {
                                 className='rounded-full sign-in__btn min-h-[30px] w-full'
                                 value={appointmentLocation}
                                 onChange={(event) => {
-                                    console.log(event.target.value);
                                     setAppointmentLocation(event.target.value)
                                 }}
                             >
@@ -207,7 +228,7 @@ const HomepageUser = ({ user, formatDate, getBookedDaysHelper }) => {
             }
 
             <Appointments isOpen={isOpen} closeWin={() => { setIsOpen(false) }}
-                appointments={appointments} appointments_dates={appointments_dates} />
+                appointments={appointments} appointments_dates={appointments_dates} coming_appointments={isComing} />
             <SendComplaint isOpen={isOpen2} closeWin={() => { setIsOpen2(false) }} user={user} />
             <ComplaintsResponses isOpen={isOpen3} closeWin={() => { setIsOpen3(false) }}
                 complaintsResponses={complaintsResponses} />

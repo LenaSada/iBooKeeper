@@ -53,18 +53,18 @@ const Complaints = ({ isOpen, closeWin, complaints }) => {
             <div key={timestamp}>
                 <h1 className='text-3xl'>Users Inquiries</h1>
                 <input
-                    type='text'
-                    value={search}
-                    className='bar__input m-2'
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder='Search for inquiry by User Name'
-                />
+                        type='text'
+                        value={search}
+                        className='bar__input m-2'
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder='Search for inquiry by User Name'
+                    />
                 {complaints && complaints.map((complaint, index) => (
                     <>
                         {(!search.trim() || complaint.user_name.toLowerCase().includes(search.toLowerCase())) &&
                             <div key={index} className='flex flex-col pt-5 '>
-                                <ExpandableButton content={complaint.subject} onClickFunc={expandComplaint}
-                                    btnKey={index} expand={expandedBtns[index]} />
+                                <ExpandableButton content={`${complaint.subject} - ${complaint.date.split('T')[0]}`} 
+                                onClickFunc={expandComplaint} btnKey={index} expand={expandedBtns[index]} />
                                 {expandedBtns[index] &&
                                     <div className='m-3'>
                                         <h1 className='font-semibold text-xl'>User Name: {complaint.user_name}<br></br></h1>
