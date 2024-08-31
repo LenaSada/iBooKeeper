@@ -240,6 +240,27 @@ export const cacnelAppointment = async (appointment_id, appointment_date) => {
     }
 }
 
+export const accountantCacnelAppointment = async (appointment_date, index, user_id, cancelationReason) => {
+    try {
+        const response = await axios.post('http://localhost:3100/accountantcancelappointment',
+            {
+                appointment_date: appointment_date,
+                index: index,
+                user_id: user_id,
+                cancelationReason: cancelationReason
+            }, {
+            withCredentials: true
+        });
+        if (response.data.error) {
+            console.log(response.data.error);
+        }
+
+        return response.data;
+    } catch (error) {
+        console.error('Error Canceling Appointment By Accountant:', error);
+    }
+}
+
 export const getUserComplaintsResponses = async (user) => {
     try {
         console.log(user);

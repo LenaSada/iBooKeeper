@@ -34,7 +34,7 @@ const SendComplaint = ({ isOpen, closeWin, user }) => {
         <MyDialog isOpen={isOpen} closeWin={closeWin}>
             {!isSent &&
                 <>
-                    <h1 className='text-3xl'>What's your complaint?</h1>
+                    <h1 className='text-3xl'>What's your inquiry?</h1>
                     <input
                         type='text'
                         value={complaintSubject}
